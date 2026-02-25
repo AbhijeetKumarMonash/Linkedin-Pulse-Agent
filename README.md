@@ -1,31 +1,41 @@
 # 🤖 LinkedIn Pulse Agent
 
-An automated content generation pipeline that scrapes tech news, uses AI to draft LinkedIn posts, and displays the status via a custom Streamlit dashboard.
+An end-to-end automated content pipeline that scrapes tech news, drafts LinkedIn posts using AI, and maintains a persistent history database, all controlled via a custom frontend UI.
 
 ## 🚀 Features
-* **Automated News Scraping:** Pulls the latest articles via RSS.
-* **AI Content Generation:** Uses Gemini to instantly draft professional LinkedIn posts based on the news.
-* **Database Integration:** Automatically appends drafts to a Google Sheet.
-* **Custom Frontend:** A Streamlit UI to trigger the agent and monitor success.
+* **RSS Integration:** Automatically pulls the latest tech news feeds.
+* **AI Content Generation:** Uses Google Gemini to draft professional LinkedIn posts.
+* **Database Memory:** Saves all generated headlines and drafts to a Google Sheets database.
+* **History Dashboard:** A Streamlit frontend to trigger the n8n workflow and instantly display the history of all generated posts.
 
 ## 🛠️ Tech Stack
-* **Workflow Automation:** n8n
-* **Frontend:** Python & Streamlit
+* **Orchestration:** n8n
+* **Frontend:** Python, Streamlit
 * **AI/LLM:** Google Gemini
 * **Database:** Google Sheets API
 
-## 📸 Screenshots
-*(Drop your image files into an `assets` folder and link them here)*
-![n8n Workflow](assets/n8n-workflow.png)
-![Streamlit UI](assets/streamlit-ui.png)
+## ⚙️ Setup Instructions
 
-## ⚙️ How to Run Locally
+1. **Clone the repository**
+   \`\`\`bash
+   git clone  https://github.com/AbhijeetKumarMonash/Linkedin-Pulse-Agent.git
+   cd Linkedin-Pulse-Agent
+   \`\`\`
 
-1. **Install Python Dependencies:**
+2. **Install dependencies**
+   \`\`\`bash
    pip install -r requirements.txt
+   \`\`\`
 
-2. **Import the n8n Workflow:**
-   Open n8n, click "Import from File", and select `workflow.json`.
+3. **Import the Workflow**
+   * Open your n8n instance.
+   * Click **Import from File** and select the `workflow.json` included in this repository.
+   * Update the Google Sheets and Gemini credentials inside the n8n nodes.
 
-3. **Run the Streamlit App:**
+4. **Run the Application**
+   \`\`\`bash
    streamlit run app.py
+   \`\`\`
+
+## 📸 Screenshots
+<img width="1612" height="610" alt="image" src="https://github.com/user-attachments/assets/7e1ee5ae-bddf-4994-9a25-c1a4272e3a63" />
