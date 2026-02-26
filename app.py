@@ -1,144 +1,217 @@
 import streamlit as st
 import requests
+import re
 import csv
 from io import StringIO
 
-# --- Page Configuration ---
-st.set_page_config(page_title="LinkedIn Pulse AI | Pro+", page_icon="⚡", layout="wide")
+# --- 1. Page Configuration ---
+st.set_page_config(page_title="Nexus Hub | Pro", page_icon="💠", layout="wide", initial_sidebar_state="expanded")
 
-# --- Custom CSS ---
+# --- 2. Advanced CSS Injection ---
 st.markdown("""
     <style>
-    .stButton>button {border-radius: 8px; font-weight: bold; height: 50px; width: 100%; transition: all 0.3s;}
-    .stButton>button:hover {border: 1px solid #0a66c2; color: #0a66c2;}
-    .latest-post {border-left: 5px solid #0a66c2; padding: 1.5rem; background-color: #f8f9fa; border-radius: 0px 8px 8px 0px; margin-bottom: 1rem;}
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap');
+
+    /* Global Theme */
+    .stApp {
+        background: radial-gradient(circle at top left, #0f172a, #020617);
+        font-family: 'Outfit', sans-serif;
+        color: #e2e8f0;
+    }
+
+    /* Typography Overrides */
+    h1, h2, h3 { font-family: 'Outfit', sans-serif; font-weight: 800; }
+    .gradient-text {
+        background: -webkit-linear-gradient(#38bdf8, #818cf8);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    /* Glassmorphism Cards */
+    .glass-card {
+        background: rgba(30, 41, 59, 0.4);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        margin-bottom: 1.5rem;
+        transition: transform 0.3s ease, border 0.3s ease;
+    }
+    .glass-card:hover { border: 1px solid rgba(56, 189, 248, 0.3); }
+    .glass-text { color: #cbd5e1; font-size: 1.05rem; line-height: 1.6; white-space: pre-wrap; }
+
+    /* Animated Primary Button */
+    .stButton>button {
+        background: linear-gradient(-45deg, #0ea5e9, #3b82f6, #8b5cf6, #ec4899);
+        background-size: 300% 300%;
+        animation: gradient-shift 4s ease infinite;
+        border: none !important;
+        color: white !important;
+        font-weight: 800;
+        font-size: 1.1rem;
+        border-radius: 12px;
+        height: 60px;
+        width: 100%;
+        box-shadow: 0 8px 20px -10px rgba(14, 165, 233, 0.8);
+        transition: all 0.3s ease;
+    }
+    .stButton>button:hover { transform: translateY(-2px); box-shadow: 0 15px 25px -10px rgba(14, 165, 233, 1); }
+
+    @keyframes gradient-shift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
+    /* Tags and Meta */
+    .data-tag { display: inline-block; background: rgba(56, 189, 248, 0.1); color: #38bdf8; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; margin-right: 8px; margin-bottom: 8px; border: 1px solid rgba(56, 189, 248, 0.2); }
+    .meta-text { color: #64748b; font-size: 0.85rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 0.5rem; display: block;}
     </style>
 """, unsafe_allow_html=True)
 
-# --- Webhook Configuration ---
-# Replace with your actual n8n Test Webhook URL
-WEBHOOK_URL = "http://localhost:5678/webhook-test/62564a4d-43be-4634-b888-b62bf777e718"
+# --- 3. App Logic & Configuration ---
+WEBHOOK_URL = "http://localhost:5678/webhook/62564a4d-43be-4634-b888-b62bf777e718"
 
-# --- Session State Management ---
 if 'history' not in st.session_state:
     st.session_state['history'] = []
 
 
-# --- Helper Function: Export to CSV ---
+def extract_hashtags(text):
+    return re.findall(r'#\w+', text)
+
+
+def estimate_read_time(text):
+    words = len(text.split())
+    minutes = max(1, round(words / 200))
+    return f"{minutes} MIN READ"
+
+
 def convert_to_csv(data_list):
     output = StringIO()
     writer = csv.writer(output)
-    writer.writerow(["Headline", "Draft"])
+    writer.writerow(["Headline", "Draft Content"])
     for row in data_list:
-        clean_row = {str(k).strip().lower(): v for k, v in row.items()}
-        h = clean_row.get("headline", clean_row.get("title", "Untitled"))
-        d = clean_row.get("draft", clean_row.get("text", "No draft text found."))
+        clean = {str(k).strip().lower(): v for k, v in row.items()}
+        h = clean.get("headline", clean.get("title", "UNTITLED"))
+        d = clean.get("draft", clean.get("text", ""))
         writer.writerow([h, d])
     return output.getvalue()
 
 
-# --- Sidebar: System Status & Metrics ---
+# --- 4. Sidebar Controls (Features Restored) ---
 with st.sidebar:
-    st.image("https://upload.wikimedia.org/wikipedia/commons/c/ca/LinkedIn_logo_initials.png", width=50)
-    st.header("⚙️ System Control")
-    st.info("Status: API Standby")
-
-    # Live Metrics
-    st.metric(label="Total Drafts in Database", value=len(st.session_state['history']))
+    st.markdown("<h2 class='gradient-text'>💠 NEXUS SYSTEM</h2>", unsafe_allow_html=True)
+    st.info("STATUS: SECURE UPLINK")
+    st.metric(label="DATABASE RECORDS", value=len(st.session_state['history']))
 
     st.divider()
-    st.markdown("### 🔍 Search Vault")
-    search_query = st.text_input("Filter previous articles by keyword...", placeholder="e.g., Waymo, AI, Cyber...")
+    st.markdown("### 🔍 SEARCH VAULT")
+    search_query = st.text_input("Filter database...", placeholder="Enter keyword...")
 
     if st.session_state['history']:
         st.divider()
-        st.markdown("### 💾 Export Data")
-        csv_data = convert_to_csv(st.session_state['history'])
-        st.download_button(
-            label="📥 Download CSV",
-            data=csv_data,
-            file_name="linkedin_pulse_history.csv",
-            mime="text/csv",
-            use_container_width=True
-        )
+        st.markdown("### 💾 EXPORT")
+        st.download_button("DOWNLOAD CSV", data=convert_to_csv(st.session_state['history']),
+                           file_name="nexus_database.csv", mime="text/csv", use_container_width=True)
 
-# --- Main Dashboard ---
-st.title("⚡ LinkedIn Pulse Content Engine")
-st.markdown("Automated tech curation and AI-powered post generation.")
-st.divider()
+# --- 5. Main Layout ---
+st.markdown(
+    "<h1 style='text-align: center; font-size: 3.5rem; margin-top: 1rem;' class='gradient-text'>LINKEDIN PULSE MATRIX</h1>",
+    unsafe_allow_html=True)
+st.markdown(
+    "<p style='text-align: center; margin-bottom: 2rem; color: #94a3b8;'>Autonomous RSS Synthesis & Content Orchestration</p>",
+    unsafe_allow_html=True)
 
 col_action, col_display = st.columns([1, 2.5], gap="large")
 
-# -- Left Column: Controls --
+# -- Left Column: Triggers --
 with col_action:
-    st.markdown("### Action Center")
-    generate_btn = st.button("🚀 Scrape News & Draft Posts", type="primary")
-    st.caption("Fetches the latest RSS feed, generates drafts via Gemini, and updates the Google Sheet.")
-
-    if generate_btn:
-        with st.spinner("🤖 Agent is processing... (Pacing requests to respect API limits)"):
+    if st.button("🚀 INITIATE AI SCRAPE"):
+        with st.spinner("Connecting to n8n pipeline... (Respecting API rate limits)"):
             try:
                 res = requests.post(WEBHOOK_URL)
-
-                if res.status_code == 429:
-                    st.warning(
-                        "⏳ Gemini API rate limit reached. The Wait node in n8n needs to be active. Please try again in a few seconds.")
-                elif res.status_code == 200:
+                if res.status_code == 200:
                     data = res.json()
                     if isinstance(data, list) and len(data) > 0:
                         st.session_state['history'] = data
-                        st.success(f"✅ Success! Database synced with {len(data)} records.")
+                        st.toast("✅ Synchronization Complete", icon="💠")
                     else:
-                        st.warning("Executed, but no data returned. Check the n8n read node.")
+                        st.warning("Executed, but payload was empty.")
+                elif res.status_code == 429:
+                    st.error("SYSTEM OVERLOAD: Gemini API Limit. Wait 10 seconds.")
                 else:
-                    st.error(f"Workflow failed. HTTP Status: {res.status_code}")
-
+                    st.error(f"HTTP ERROR: {res.status_code}")
             except Exception as e:
-                st.error(f"Connection Error: Is n8n listening? Details: {e}")
+                st.error("CONNECTION SEVERED: Is n8n listening?")
 
-# -- Right Column: Display --
+# -- Right Column: Data Visualization --
 with col_display:
-    display_data = st.session_state['history']
+    display_data = st.session_state.get('history', [])
 
     if not display_data:
-        st.info("Awaiting execution. Click the button to generate and fetch your first batch of articles.")
+        st.markdown("""
+        <div class="glass-card" style="text-align: center;">
+            <h3 style="color: #64748b;">AWAITING COMMAND</h3>
+            <p style="color: #475569;">Initiate Scrape to populate the visualization matrix.</p>
+        </div>
+        """, unsafe_allow_html=True)
     else:
-        # Reverse list to show newest first
         display_data = list(reversed(display_data))
 
         # Apply Search Filter
         if search_query:
             display_data = [row for row in display_data if search_query.lower() in str(row).lower()]
             if not display_data:
-                st.warning(f"No articles match your search query: '{search_query}'")
+                st.warning("No records match your query.")
 
         if display_data:
-            # Create Navigation Tabs
-            tab1, tab2 = st.tabs(["✨ Latest Output", "📚 Full Archive"])
+            # Tabbed View Restored
+            tab_latest, tab_archive = st.tabs(["✨ LIVE SIGNAL", "📚 ARCHIVAL LOGS"])
 
-            # Tab 1: Prominent display of the newest post
-            with tab1:
+            with tab_latest:
                 latest = display_data[0]
-                clean_latest = {str(k).strip().lower(): v for k, v in latest.items()}
-                head = clean_latest.get("headline", clean_latest.get("title", "Untitled"))
-                body = clean_latest.get("draft", clean_latest.get("text", "No draft text found."))
+                clean = {str(k).strip().lower(): v for k, v in latest.items()}
+
+                # Resilient Fallback mapping
+                body = clean.get("draft", clean.get("text", "No transmission data."))
+                head = clean.get("headline", clean.get("title", ""))
+
+                if not head or head == "":
+                    subject_match = re.search(r'\*\*Subject:\s*(.*?)\*\*', body)
+                    head = subject_match.group(1) if subject_match else "AUTOMATED TRANSMISSION"
+
+                # Clean up the body text
+                display_body = re.sub(r'\*\*Subject:\s*.*?\*\*', '', body).strip()
+
+                hashtags = extract_hashtags(display_body)
+                tags_html = "".join([f"<span class='data-tag'>{tag}</span>" for tag in hashtags])
 
                 st.markdown(f"""
-                <div class="latest-post">
-                    <h3>{head}</h3>
-                    <p style="white-space: pre-wrap;">{body}</p>
+                <div class="glass-card">
+                    <span class="meta-text">{estimate_read_time(display_body)}</span>
+                    <h2 style="color: #f8fafc; margin-top: 0;">{head}</h2>
+                    <div class="glass-text">{display_body}</div>
+                    <div style="margin-top: 1.5rem;">{tags_html}</div>
                 </div>
                 """, unsafe_allow_html=True)
 
-            # Tab 2: Clean expanders for older posts
-            with tab2:
+            with tab_archive:
                 if len(display_data) > 1:
                     for i, row in enumerate(display_data[1:]):
-                        clean_row = {str(k).strip().lower(): v for k, v in row.items()}
-                        head = clean_row.get("headline", clean_row.get("title", "Untitled"))
-                        body = clean_row.get("draft", clean_row.get("text", "No draft available."))
+                        clean = {str(k).strip().lower(): v for k, v in row.items()}
+                        body = clean.get("draft", clean.get("text", "No text."))
+                        head = clean.get("headline", clean.get("title", ""))
 
-                        with st.expander(f"📝 {head}"):
-                            st.markdown(body)
+                        if not head or head == "":
+                            subject_match = re.search(r'\*\*Subject:\s*(.*?)\*\*', body)
+                            head = subject_match.group(1) if subject_match else f"ARCHIVE_LOG_{i}"
+
+                        with st.expander(f"📁 {head}"):
+                            st.markdown(f"<span class='meta-text'>{estimate_read_time(body)}</span>",
+                                        unsafe_allow_html=True)
+                            st.markdown(re.sub(r'\*\*Subject:\s*.*?\*\*', '', body).strip())
+
+                            hashtags = extract_hashtags(body)
+                            if hashtags:
+                                tags_html = "".join([f"<span class='data-tag'>{tag}</span>" for tag in hashtags])
+                                st.markdown(tags_html, unsafe_allow_html=True)
                 else:
-                    st.write("No historical archives available yet. Run the agent again to build your database!")
+                    st.info("No older archives available. Run the sequence again to build history.")
