@@ -41,5 +41,6 @@ An end-to-end automated content pipeline that scrapes tech news, drafts LinkedIn
 <img width="1612" height="610" alt="image" src="https://github.com/user-attachments/assets/7e1ee5ae-bddf-4994-9a25-c1a4272e3a63" />
 output :<img width="1462" height="642" alt="image" src="https://github.com/user-attachments/assets/91c2ced2-eb63-4089-8e2b-6b7e1980c1ba" />
 streamlit output of version 1 basic :
-<img width="1911" height="947" alt="image" src="https://github.com/user-attachments/assets/b8268af2-e421-4879-9ba3-8b3f4e815cbe" />
+<img width="1917" height="866" alt="image" src="https://github.com/user-attachments/assets/7ff3cc82-9a35-4cf2-8b3a-a17153b83830" />
+
 
