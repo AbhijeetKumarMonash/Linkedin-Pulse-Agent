@@ -38,8 +38,8 @@ with col2:
                         st.success(f"✅ Success! Fetched {len(data)} total records from the database.")
 
                         # --- DEBUG VIEW ---
-                        with st.expander("🔍 Debug: View Raw JSON Payload from n8n"):
-                            st.json(data)
+                        # with st.expander("🔍 Debug: View Raw JSON Payload from n8n"):
+                        #     st.json(data)
 
                         data.reverse()
                         tab1, tab2 = st.tabs(["✨ Latest Draft", "🗄️ History Vault"])
