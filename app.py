@@ -70,41 +70,48 @@ st.markdown("""
 # --- 3. App Logic & Configuration ---
 WEBHOOK_URL = "http://localhost:5678/webhook/62564a4d-43be-4634-b888-b62bf777e718"
 
-if 'history' not in st.session_state:
-    st.session_state['history'] = []
+# --- URLs ---
+# generation Webhook URL (POST)
+N8N_WEBHOOK_URL = "http://localhost:5678/webhook-test/62564a4d-43be-4634-b888-b62bf777e718"
 
+# GET Method for History Vault V1.1
+N8N_FETCH_URL = "http://localhost:5678/webhook-test/132e1cb7-e4b6-4bc4-9ee4-81f791671dfb"
 
-def extract_hashtags(text):
-    return re.findall(r'#\w+', text)
+col1, col2 = st.columns([1, 3], gap="large")
 
+with col1:
+    st.subheader("Control Panel")
+    st.info("Choose an action below to manage your LinkedIn content.")
+
+    # Existing generation button
+    generate_btn = st.button("🚀 Scrape & Draft", type="primary", use_container_width=True)
+
+    # New fetch history button
+    fetch_btn = st.button("🗄️ Fetch History Only", type="secondary", use_container_width=True)
+
+with col2:
+    # --- LOGIC 1: RUN THE AGENT ---
+    if generate_btn:
+        with st.spinner("🤖 Agent is scraping news and drafting content..."):
+            try:
+                response = requests.post(N8N_WEBHOOK_URL)
 
 def estimate_read_time(text):
     words = len(text.split())
     minutes = max(1, round(words / 200))
     return f"{minutes} MIN READ"
 
+                    if isinstance(data, list) and len(data) > 0:
+                        st.success(f"✅ Success! Fetched {len(data)} total records from the database.")
+                        data.reverse()
+                        tab1, tab2 = st.tabs(["✨ Latest Draft", "🗄️ History Vault"])
 
-def convert_to_csv(data_list):
-    output = StringIO()
-    writer = csv.writer(output)
-    writer.writerow(["Headline", "Draft Content"])
-    for row in data_list:
-        clean = {str(k).strip().lower(): v for k, v in row.items()}
-        h = clean.get("headline", clean.get("title", "UNTITLED"))
-        d = clean.get("draft", clean.get("text", ""))
-        writer.writerow([h, d])
-    return output.getvalue()
-
-
-# --- 4. Sidebar Controls (Features Restored) ---
-with st.sidebar:
-    st.markdown("<h2 class='gradient-text'>💠 NEXUS SYSTEM</h2>", unsafe_allow_html=True)
-    st.info("STATUS: SECURE UPLINK")
-    st.metric(label="DATABASE RECORDS", value=len(st.session_state['history']))
-
-    st.divider()
-    st.markdown("### 🔍 SEARCH VAULT")
-    search_query = st.text_input("Filter database...", placeholder="Enter keyword...")
+                        # TAB 1: The newest generation
+                        with tab1:
+                            latest = data[0]
+                            clean_latest = {str(k).strip().lower(): v for k, v in latest.items()}
+                            head = clean_latest.get("headline", clean_latest.get("title", "No Headline Available"))
+                            body = clean_latest.get("draft", clean_latest.get("text", "No Draft text found."))
 
     if st.session_state['history']:
         st.divider()
@@ -112,15 +119,12 @@ with st.sidebar:
         st.download_button("DOWNLOAD CSV", data=convert_to_csv(st.session_state['history']),
                            file_name="nexus_database.csv", mime="text/csv", use_container_width=True)
 
-# --- 5. Main Layout ---
-st.markdown(
-    "<h1 style='text-align: center; font-size: 3.5rem; margin-top: 1rem;' class='gradient-text'>LINKEDIN PULSE MATRIX</h1>",
-    unsafe_allow_html=True)
-st.markdown(
-    "<p style='text-align: center; margin-bottom: 2rem; color: #94a3b8;'>Autonomous RSS Synthesis & Content Orchestration</p>",
-    unsafe_allow_html=True)
-
-col_action, col_display = st.columns([1, 2.5], gap="large")
+                        # TAB 2: History loop
+                        with tab2:
+                            for i, row in enumerate(data[1:]):
+                                clean_row = {str(k).strip().lower(): v for k, v in row.items()}
+                                head = clean_row.get("headline", clean_row.get("title", "Untitled"))
+                                body = clean_row.get("draft", clean_row.get("text", "No Draft available."))
 
 # -- Left Column: Triggers --
 with col_action:
@@ -138,80 +142,41 @@ with col_action:
                 elif res.status_code == 429:
                     st.error("SYSTEM OVERLOAD: Gemini API Limit. Wait 10 seconds.")
                 else:
-                    st.error(f"HTTP ERROR: {res.status_code}")
+                    st.error(f"n8n returned an error: {response.status_code}")
             except Exception as e:
-                st.error("CONNECTION SEVERED: Is n8n listening?")
+                st.error(f"Could not connect to n8n. Error: {e}")
 
-# -- Right Column: Data Visualization --
-with col_display:
-    display_data = st.session_state.get('history', [])
+    # --- LOGIC 2: FETCH HISTORY ONLY ---
+    elif fetch_btn:
+        with st.spinner("🗄️ Fetching your database history..."):
+            try:
+                # Note the requests.get() instead of requests.post()
+                response = requests.get(N8N_FETCH_URL)
 
-    if not display_data:
-        st.markdown("""
-        <div class="glass-card" style="text-align: center;">
-            <h3 style="color: #64748b;">AWAITING COMMAND</h3>
-            <p style="color: #475569;">Initiate Scrape to populate the visualization matrix.</p>
-        </div>
-        """, unsafe_allow_html=True)
-    else:
-        display_data = list(reversed(display_data))
+                if response.status_code == 200:
+                    data = response.json()
 
-        # Apply Search Filter
-        if search_query:
-            display_data = [row for row in display_data if search_query.lower() in str(row).lower()]
-            if not display_data:
-                st.warning("No records match your query.")
+                    if isinstance(data, list) and len(data) > 0:
+                        st.success(f"✅ Success! Retrieved {len(data)} records from the vault.")
+                        data.reverse()
 
-        if display_data:
-            # Tabbed View Restored
-            tab_latest, tab_archive = st.tabs(["✨ LIVE SIGNAL", "📚 ARCHIVAL LOGS"])
+                        st.subheader("🗄️ History Vault")
 
-            with tab_latest:
-                latest = display_data[0]
-                clean = {str(k).strip().lower(): v for k, v in latest.items()}
+                        for i, row in enumerate(data):
+                            clean_row = {str(k).strip().lower(): v for k, v in row.items()}
+                            head = clean_row.get("headline", clean_row.get("title", "Untitled"))
+                            body = clean_row.get("draft", clean_row.get("text", "No Draft available."))
 
-                # Resilient Fallback mapping
-                body = clean.get("draft", clean.get("text", "No transmission data."))
-                head = clean.get("headline", clean.get("title", ""))
-
-                if not head or head == "":
-                    subject_match = re.search(r'\*\*Subject:\s*(.*?)\*\*', body)
-                    head = subject_match.group(1) if subject_match else "AUTOMATED TRANSMISSION"
-
-                # Clean up the body text
-                display_body = re.sub(r'\*\*Subject:\s*.*?\*\*', '', body).strip()
-
-                hashtags = extract_hashtags(display_body)
-                tags_html = "".join([f"<span class='data-tag'>{tag}</span>" for tag in hashtags])
-
-                st.markdown(f"""
-                <div class="glass-card">
-                    <span class="meta-text">{estimate_read_time(display_body)}</span>
-                    <h2 style="color: #f8fafc; margin-top: 0;">{head}</h2>
-                    <div class="glass-text">{display_body}</div>
-                    <div style="margin-top: 1.5rem;">{tags_html}</div>
-                </div>
-                """, unsafe_allow_html=True)
-
-            with tab_archive:
-                if len(display_data) > 1:
-                    for i, row in enumerate(display_data[1:]):
-                        clean = {str(k).strip().lower(): v for k, v in row.items()}
-                        body = clean.get("draft", clean.get("text", "No text."))
-                        head = clean.get("headline", clean.get("title", ""))
-
-                        if not head or head == "":
-                            subject_match = re.search(r'\*\*Subject:\s*(.*?)\*\*', body)
-                            head = subject_match.group(1) if subject_match else f"ARCHIVE_LOG_{i}"
-
-                        with st.expander(f"📁 {head}"):
-                            st.markdown(f"<span class='meta-text'>{estimate_read_time(body)}</span>",
-                                        unsafe_allow_html=True)
-                            st.markdown(re.sub(r'\*\*Subject:\s*.*?\*\*', '', body).strip())
-
-                            hashtags = extract_hashtags(body)
-                            if hashtags:
-                                tags_html = "".join([f"<span class='data-tag'>{tag}</span>" for tag in hashtags])
-                                st.markdown(tags_html, unsafe_allow_html=True)
+                            with st.expander(f"📝 {head} (Archive #{len(data) - i})"):
+                                st.markdown(body)
+                    else:
+                        st.warning("Database connected, but no history found.")
                 else:
-                    st.info("No older archives available. Run the sequence again to build history.")
+                    st.error(f"n8n returned an error: {response.status_code}")
+            except Exception as e:
+                st.error(f"Could not connect to n8n. Error: {e}")
+
+    # --- LOGIC 3: DEFAULT STATE ---
+    else:
+        st.markdown("### 👈 Awaiting instructions...")
+        st.caption("Hit 'Scrape & Draft' to run the agent, or 'Fetch History' to view past drafts.")
