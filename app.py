@@ -1,19 +1,74 @@
 import streamlit as st
 import requests
+import re
+import csv
+from io import StringIO
 
-st.set_page_config(page_title="LinkedIn Pulse AI", page_icon="⚡", layout="wide")
+# --- 1. Page Configuration ---
+st.set_page_config(page_title="Nexus Hub | Pro", page_icon="💠", layout="wide", initial_sidebar_state="expanded")
 
-# Custom CSS
+# --- 2. Advanced CSS Injection ---
 st.markdown("""
     <style>
-    .block-container { padding-top: 2rem; }
-    .stButton>button { width: 100%; border-radius: 8px; font-weight: bold; height: 50px;}
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap');
+
+    /* Global Theme */
+    .stApp {
+        background: radial-gradient(circle at top left, #0f172a, #020617);
+        font-family: 'Outfit', sans-serif;
+        color: #e2e8f0;
+    }
+
+    /* Typography Overrides */
+    h1, h2, h3 { font-family: 'Outfit', sans-serif; font-weight: 800; }
+    .gradient-text {
+        background: -webkit-linear-gradient(#38bdf8, #818cf8);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    /* Glassmorphism Cards */
+    .glass-card {
+        background: rgba(30, 41, 59, 0.4);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        margin-bottom: 1.5rem;
+        transition: transform 0.3s ease, border 0.3s ease;
+    }
+    .glass-card:hover { border: 1px solid rgba(56, 189, 248, 0.3); }
+    .glass-text { color: #cbd5e1; font-size: 1.05rem; line-height: 1.6; white-space: pre-wrap; }
+
+    /* Animated Primary Button */
+    .stButton>button {
+        background: linear-gradient(-45deg, #0ea5e9, #3b82f6, #8b5cf6, #ec4899);
+        background-size: 300% 300%;
+        animation: gradient-shift 4s ease infinite;
+        border: none !important;
+        color: white !important;
+        font-weight: 800;
+        font-size: 1.1rem;
+        border-radius: 12px;
+        height: 60px;
+        width: 100%;
+        box-shadow: 0 8px 20px -10px rgba(14, 165, 233, 0.8);
+        transition: all 0.3s ease;
+    }
+    .stButton>button:hover { transform: translateY(-2px); box-shadow: 0 15px 25px -10px rgba(14, 165, 233, 1); }
+
+    @keyframes gradient-shift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
+    /* Tags and Meta */
+    .data-tag { display: inline-block; background: rgba(56, 189, 248, 0.1); color: #38bdf8; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; margin-right: 8px; margin-bottom: 8px; border: 1px solid rgba(56, 189, 248, 0.2); }
+    .meta-text { color: #64748b; font-size: 0.85rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 0.5rem; display: block;}
     </style>
 """, unsafe_allow_html=True)
 
-st.title("⚡ LinkedIn Pulse Agent")
-st.markdown("Automated tech news curation and AI-powered LinkedIn draft generation.")
-st.divider()
+# --- 3. App Logic & Configuration ---
+WEBHOOK_URL = "http://localhost:5678/webhook/62564a4d-43be-4634-b888-b62bf777e718"
 
 # --- URLs ---
 # generation Webhook URL (POST)
@@ -41,8 +96,10 @@ with col2:
             try:
                 response = requests.post(N8N_WEBHOOK_URL)
 
-                if response.status_code == 200:
-                    data = response.json()
+def estimate_read_time(text):
+    words = len(text.split())
+    minutes = max(1, round(words / 200))
+    return f"{minutes} MIN READ"
 
                     if isinstance(data, list) and len(data) > 0:
                         st.success(f"✅ Success! Fetched {len(data)} total records from the database.")
@@ -56,8 +113,11 @@ with col2:
                             head = clean_latest.get("headline", clean_latest.get("title", "No Headline Available"))
                             body = clean_latest.get("draft", clean_latest.get("text", "No Draft text found."))
 
-                            st.subheader(head)
-                            st.markdown(f"> {body}")
+    if st.session_state['history']:
+        st.divider()
+        st.markdown("### 💾 EXPORT")
+        st.download_button("DOWNLOAD CSV", data=convert_to_csv(st.session_state['history']),
+                           file_name="nexus_database.csv", mime="text/csv", use_container_width=True)
 
                         # TAB 2: History loop
                         with tab2:
@@ -66,10 +126,21 @@ with col2:
                                 head = clean_row.get("headline", clean_row.get("title", "Untitled"))
                                 body = clean_row.get("draft", clean_row.get("text", "No Draft available."))
 
-                                with st.expander(f"📝 {head} (Archive #{len(data) - 1 - i})"):
-                                    st.markdown(body)
+# -- Left Column: Triggers --
+with col_action:
+    if st.button("🚀 INITIATE AI SCRAPE"):
+        with st.spinner("Connecting to n8n pipeline... (Respecting API rate limits)"):
+            try:
+                res = requests.post(WEBHOOK_URL)
+                if res.status_code == 200:
+                    data = res.json()
+                    if isinstance(data, list) and len(data) > 0:
+                        st.session_state['history'] = data
+                        st.toast("✅ Synchronization Complete", icon="💠")
                     else:
-                        st.warning("n8n fired successfully, but returned empty data.")
+                        st.warning("Executed, but payload was empty.")
+                elif res.status_code == 429:
+                    st.error("SYSTEM OVERLOAD: Gemini API Limit. Wait 10 seconds.")
                 else:
                     st.error(f"n8n returned an error: {response.status_code}")
             except Exception as e:
