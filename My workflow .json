@@ -1,0 +1,314 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "62564a4d-43be-4634-b888-b62bf777e718",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "48f7385c-6c21-4702-a06d-88572e22c4d3",
+      "name": "Webhook",
+      "webhookId": "62564a4d-43be-4634-b888-b62bf777e718"
+    },
+    {
+      "parameters": {
+        "url": "https://techcrunch.com/feed/",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        0
+      ],
+      "id": "1e9caa5b-8bb4-4c1b-9dcc-fb184f49be51",
+      "name": "RSS Read"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        448,
+        0
+      ],
+      "id": "fc741025-c492-4973-94d5-97bddbd68d69",
+      "name": "Limit"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        752,
+        224
+      ],
+      "id": "18db0658-ba9c-4698-bf75-01ddb3409428",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "kJ1ZWqNpN9lXNkyC",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Draft a LinkedIn post about: {{$json.title}}. Use bullet points and a professional tone..",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        672,
+        0
+      ],
+      "id": "81bc5f41-8d86-469d-bf7f-cbc90cdaa2b9",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1XyGlxGmhtnz3OC5oY3fWF2FrGs0QnGquNoJY-lkPIKU",
+          "mode": "list",
+          "cachedResultName": "LinkedIn Pulse",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1XyGlxGmhtnz3OC5oY3fWF2FrGs0QnGquNoJY-lkPIKU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1XyGlxGmhtnz3OC5oY3fWF2FrGs0QnGquNoJY-lkPIKU/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Headline": "={{ $('RSS Read').item.json.title }}",
+            "Draft": "={{ $json.text }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Headline",
+              "displayName": "Headline",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Draft",
+              "displayName": "Draft",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1024,
+        0
+      ],
+      "id": "21c2086b-2b79-45b4-a653-500e6449d314",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleApi": {
+          "id": "b0g44Lp7bvgNIKoU",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "documentId": {
+          "__rl": true,
+          "value": "1XyGlxGmhtnz3OC5oY3fWF2FrGs0QnGquNoJY-lkPIKU",
+          "mode": "list",
+          "cachedResultName": "LinkedIn Pulse",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1XyGlxGmhtnz3OC5oY3fWF2FrGs0QnGquNoJY-lkPIKU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1XyGlxGmhtnz3OC5oY3fWF2FrGs0QnGquNoJY-lkPIKU/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1232,
+        0
+      ],
+      "id": "017a88ac-5c06-4f46-a82e-9f8160933a47",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleApi": {
+          "id": "b0g44Lp7bvgNIKoU",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1440,
+        0
+      ],
+      "id": "ad5de2d1-aaaf-4ef7-b0d1-a75cef44223b",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "path": "132e1cb7-e4b6-4bc4-9ee4-81f791671dfb",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        992,
+        272
+      ],
+      "id": "38fc1c35-7224-4ddc-93d6-2dd63c08c9e9",
+      "name": "Webhook1",
+      "webhookId": "132e1cb7-e4b6-4bc4-9ee4-81f791671dfb"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "RSS Read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS Read": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "6a3ef99c-fd5b-4013-bd56-01000891a026",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "18d2e740349e3a15d65bc490be882ffcda335492436c2ae3e6a555ceb42cb8fc"
+  },
+  "id": "bY7u53GDijQdT9za",
+  "tags": []
+}
