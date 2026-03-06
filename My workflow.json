@@ -96,10 +96,10 @@
           "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1XyGlxGmhtnz3OC5oY3fWF2FrGs0QnGquNoJY-lkPIKU/edit#gid=0"
         },
         "columns": {
-          "mappingMode": "autoMapInputData",
+          "mappingMode": "defineBelow",
           "value": {
-            "Headline": "title",
-            "Draft": "text"
+            "Headline": "={{ $('RSS Read').item.json.title }}",
+            "Draft": "={{ $json.text }}"
           },
           "matchingColumns": [],
           "schema": [
@@ -120,16 +120,6 @@
               "display": true,
               "type": "string",
               "canBeUsedToMatch": true
-            },
-            {
-              "id": "text",
-              "displayName": "text",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
             }
           ],
           "attemptToConvertTypes": false,
@@ -217,7 +207,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "db3f033e-465f-44e1-b87d-d669122aaf43",
+  "versionId": "ec4bc53d-b496-4f56-b0b9-e33f5d7b426e",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "18d2e740349e3a15d65bc490be882ffcda335492436c2ae3e6a555ceb42cb8fc"
