@@ -189,6 +189,22 @@
       ],
       "id": "ad5de2d1-aaaf-4ef7-b0d1-a75cef44223b",
       "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "path": "132e1cb7-e4b6-4bc4-9ee4-81f791671dfb",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        992,
+        272
+      ],
+      "id": "38fc1c35-7224-4ddc-93d6-2dd63c08c9e9",
+      "name": "Webhook1",
+      "webhookId": "132e1cb7-e4b6-4bc4-9ee4-81f791671dfb"
     }
   ],
   "pinData": {},
@@ -269,6 +285,17 @@
           }
         ]
       ]
+    },
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": false,
@@ -277,7 +304,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "335a84e4-c085-48b6-88fc-26e0ef792c45",
+  "versionId": "6a3ef99c-fd5b-4013-bd56-01000891a026",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "18d2e740349e3a15d65bc490be882ffcda335492436c2ae3e6a555ceb42cb8fc"
